@@ -1,6 +1,7 @@
 {
     "token": "BOT TOKEN GOES HERE",
     "clientId": "CLIENT ID GOES HERE",
+    "guildId": "GUILD ID HERE",
     "dbFile": "registrar.db",
     "Green": "0x78B159",
     "Orange": "0xFF9900",
