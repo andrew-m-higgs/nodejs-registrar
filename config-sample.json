@@ -1,0 +1,17 @@
+{
+    "token": "BOT TOKEN GOES HERE",
+    "clientId": "CLIENT ID GOES HERE",
+    "guildId": "1042388421240442900",
+    "dbFile": "registrar.db",
+    "Green": "0x78B159",
+    "Orange": "0xFF9900",
+    "Red": "0xDD2E44",
+    "Blue": "0x19AFE4",
+    "NoPermission": { 
+        "content": ":no_entry: You do not have permission to run this command!", 
+        "ephemeral": true },
+    "NotYet": { 
+        "content": ":construction_site: Not yet implimented yet!", 
+        "ephemeral": true 
+    }
+}
