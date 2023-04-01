@@ -9,28 +9,28 @@ module.exports = {
 	async execute(interaction, config) {
 		const fields = [
 			{
-				value: '/register',
-				name: 'Register a wallet which is used by the project to determine the roles you receive based on the NFTs you hold from ' + config.collection_name + '.',
+				name: '/register',
+				value: 'Register a wallet which is used by the project to determine the roles you receive based on the NFTs you hold from ' + config.collection_name + '.',
 			},
 			{
-				value: '/update-roles',
-				name: '**NOT YET**: Used to confirm that your roles are still correct. Typically used after buying or selling NFTs from ' + config.collection_name + '.',
+				name: '/update-roles',
+				value: '**NOT YET**: Used to confirm that your roles are still correct. Typically used after buying or selling NFTs from ' + config.collection_name + '.',
 			},
 			{
-				value: '/view-owner-roles',
-				name: 'View a list of owner roles you can achieve in ' + config.collection_name + '.',
+				namee: '/view-owner-roles',
+				value: 'View a list of owner roles you can achieve in ' + config.collection_name + '.',
 			},
 			{
-				value: '/flex',
-				name: 'Flex your favourite NFT from ' + config.collection_name + '.',
+				name: '/flex',
+				value: 'Flex your favourite NFT from ' + config.collection_name + '.',
 			},
 			{
-				value: '/flex-random',
-				name: 'Flex a random NFT from ' + config.collection_name + '.',
+				name: '/flex-random',
+				value: 'Flex a random NFT from ' + config.collection_name + '.',
 			},
 			{
-				value: '/info',
-				name: 'Show some information about the server and project.',
+				name: '/info',
+				value: 'Show some information about the server and project.',
 			},
 		];
 		const embed = [{
