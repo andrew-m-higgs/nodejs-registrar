@@ -45,7 +45,7 @@ module.exports = {
 				},
 				{
 					name: '/check',
-					value: '**NOT YET** Used to check anyone who has a registered wallet. This will run through and check owned assets and update roles if necessary.',
+					value: 'Used to check anyone who has a registered wallet. This will run through and check owned assets and update roles if necessary.',
 				},
 				{
 					name: '/check-config',
