@@ -14,7 +14,7 @@ module.exports = {
 			},
 			{
 				name: '/update-roles',
-				value: '**NOT YET**: Used to confirm that your roles are still correct. Typically used after buying or selling NFTs from ' + config.collection_name + '.',
+				value: 'Used to confirm that your roles are still correct. Typically used after buying or selling NFTs from ' + config.collection_name + '.',
 			},
 			{
 				name: '/view-owner-roles',

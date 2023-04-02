@@ -33,7 +33,7 @@ module.exports = {
 				},
 				{
 					name: '/config-optin-token',
-					value: '**NOT YET** Can be set but is not yet used within the /register command: The token used to confirm ownership of the account being registered.',
+					value: 'The token used to confirm ownership of the account being registered.',
 				},
 				{
 					name: '/update-creator-ids',
