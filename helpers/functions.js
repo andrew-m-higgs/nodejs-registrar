@@ -82,6 +82,10 @@ module.exports = {
 		const assetIPFS = flexAsset['ipfs'];
 		const assetID = flexAsset['asset_id'];
 		const assetQty = flexAsset['qty'];
+		const ipfsSites = ['https://ipfs.algonft.tools/ipfs/', 'https://ipfs.io/ipfs/'];
+		// const randIdx = Math.round(Math.random());
+		// Test algonft.tools by itself. ipfs.io seemed to timeout a few times
+		const linkIPFS = `${ipfsSites[0]}${assetIPFS}`;
 		let colour = 0xFF9900;
 		let message_content = 'Something went wrong.';
 		let title = '';
@@ -129,7 +133,7 @@ module.exports = {
 					title: title,
 					description: message_content,
 					image: {
-						url: `https://ipfs.io/ipfs/${assetIPFS}`,
+						url: `${linkIPFS}`,
 					},
 					fields: [
 						{
@@ -137,6 +141,9 @@ module.exports = {
 							value: `This asset has a quantity of ${assetQty}`,
 						},
 					],
+					footer: {
+						text: `${linkIPFS}`,
+					},
 				},
 			],
 		});
