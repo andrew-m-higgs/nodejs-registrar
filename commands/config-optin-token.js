@@ -32,7 +32,7 @@ module.exports = {
 			const content = 'Updating the Optin Token ASA for this project.';
 
 			await interaction.reply({ content: content, embeds: embeds, ephemeral: true });
-			const sql = `UPDATE config SET optin_asa_id = "${optin_token}", optin-tx-timeout = ${tx_timeout};`;
+			const sql = `UPDATE config SET optin_asa_id = "${optin_token}", optin_tx_timeout = ${tx_timeout};`;
 			try {
 				const db = await db_functions.dbOpen();
 				await db.run(sql);
