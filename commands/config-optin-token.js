@@ -12,6 +12,12 @@ module.exports = {
 				.setName('optin-token')
 				.setDescription('The optin token ASA for this project.')
 				.setRequired(true),
+		)
+		.addNumberOption(option =>
+			option
+				.setName('tx-timeout')
+				.setDescription('How recently should the transaction on this token be. In minutes.')
+				.setRequired(true),
 		),
 
 	async execute(interaction, config) {
@@ -21,11 +27,12 @@ module.exports = {
 
 		if (isAdmin) {
 			const optin_token = await interaction.options.getString('optin-token');
+			const tx_timeout = await interaction.options.getSnumber('tx-timeout');
 			const embeds = [];
 			const content = 'Updating the Optin Token ASA for this project.';
 
 			await interaction.reply({ content: content, embeds: embeds, ephemeral: true });
-			const sql = `UPDATE config SET optin_asa_id = "${optin_token}";`;
+			const sql = `UPDATE config SET optin_asa_id = "${optin_token}", optin-tx-timeout = ${tx_timeout};`;
 			try {
 				const db = await db_functions.dbOpen();
 				await db.run(sql);
@@ -37,6 +44,7 @@ module.exports = {
 
 				// Update the config variable
 				config.optin_token = optin_token;
+				config.optin_tx_timeout = tx_timeout;
 
 				await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 			} catch {

@@ -6,8 +6,8 @@ const sqlCreateMembers = 'CREATE TABLE members(member_id text PRIMARY KEY, nickn
 const sqlCreateAssets = 'CREATE TABLE assets(asset_id integer PRIMARY KEY, name text, ipfs text, qty integer);';
 const sqlCreateRoles = 'CREATE TABLE roles(role_id text PRIMARY KEY, role_name text, numnfts integer);';
 const sqlCreateInfo = 'CREATE TABLE info(key text PRIMARY KEY, value text);';
-const sqlCreateConfig = 'CREATE TABLE config(collection_name text, wallet_strings text, secondary text, admin_role_id text, admin_role_name text, registered_role_id text, registered_role_name text, optin_asa_id text);';
-const sqlInsertConfig = 'INSERT INTO config(collection_name, wallet_strings, secondary, admin_role_id, admin_role_name, registered_role_id, registered_role_name, optin_asa_id) VALUES("", "", "", "", "", "", "", "");';
+const sqlCreateConfig = 'CREATE TABLE config(collection_name text, wallet_strings text, secondary text, admin_role_id text, admin_role_name text, registered_role_id text, registered_role_name text, optin_asa_id text, optin_tx_timeout integer);';
+const sqlInsertConfig = 'INSERT INTO config(collection_name, wallet_strings, secondary, admin_role_id, admin_role_name, registered_role_id, registered_role_name, optin_asa_id) VALUES("", "", "", "", "", "", "", "", 0);';
 
 async function doDBOpen() {
 	const { open } = require('sqlite');
