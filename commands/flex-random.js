@@ -17,7 +17,6 @@ module.exports = {
 
 		const sql = 'SELECT * FROM assets ORDER BY RANDOM() LIMIT 1';
 		const flexAsset = await db.get(sql);
-		console.log('SQL: ' + sql);
 
 		functions.flexAsset(interaction, config, flexAsset, 'RANDOM');
 	},
