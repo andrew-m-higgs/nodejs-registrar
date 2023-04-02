@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { displayOptinButton } = require('../helpers/functions.js');
 // const fetch = require('node-fetch');
 const functions = require('../helpers/functions.js');
 // const db_functions = require('../helpers/db-functions.js');
@@ -22,7 +23,11 @@ module.exports = {
 		const member_id = interaction.user.id;
 		await interaction.reply({ content: content, ephemeral: true });
 
-		functions.updateRoles(interaction, config, nickname, wallet_string, member_id, content, 'UPDATE');
-
+		const isOptedIn = await functions.isOptedIn(interaction, config, wallet_string);
+		if (isOptedIn) {
+			functions.updateRoles(interaction, config, nickname, wallet_string, member_id, content, 'UPDATE');
+		} else {
+			displayOptinButton(interaction, config, content);
+		}
 	},
 };

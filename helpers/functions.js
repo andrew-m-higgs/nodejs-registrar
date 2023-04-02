@@ -1,3 +1,4 @@
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const fetch = require('node-fetch');
 const { Green, Red } = require('../config.json');
 const db_functions = require('./db-functions.js');
@@ -147,19 +148,45 @@ module.exports = {
 		return Math.floor(Math.random() * 16777215);
 	},
 
-	isOptedIn: (interaction, config) => {
+	// WORK IN PROGRESS
+	isOptedIn: async (interaction, config, wallet_string) => {
 		// Check if wallet_string is opted-in
 		if (config.optin_token == '') {
 			// If no optin_token set then assume true
 			return true;
 		} else {
-			//
+			// Check transactions for wallet_string and confirm transaction is within tx_timeout
+			const optin_token = config.optin_token;
+			// convert tx_timeout to milliseconds ( * 60000 )
+			const tx_timeout = parseInt(config.optin_tx_timeout) * 60000;
+			// const currentTime = new Date();
+			// const mathTime = new Date(currentTime - tx_timeout);
+			const finalTime = new Date(Date.now() - tx_timeout).toISOString();
+			const response = await fetch('https://algoindexer.algoexplorerapi.io/v2/accounts/' + wallet_string + '/transactions?tx-type=axfer&after-time=' + finalTime);
+			console.log('https://algoindexer.algoexplorerapi.io/v2/accounts/' + wallet_string + '/transactions?tx-type=axfer&after-time=' + finalTime);
+			const txResult = await response.json();
+			console.log(JSON.stringify(txResult));
+			const txs = txResult.transactions;
+			for (let j = 0; j < txs.length; j++) {
+				console.log('HERE');
+				if ((txs[j]['asset-transfer-transaction'] != undefined) && (txs[j]['asset-transfer-transaction']['asset-id'] == optin_token)) {
+					return true;
+				}
+			}
+			return false;
 		}
 	},
 
-	displayOptinButton: (interaction, config) => {
+	displayOptinButton: async (interaction, config, content) => {
 		// Display a button allowing optin and one to say 'Have Opted In'
-
+		const row = new ActionRowBuilder()
+			.addComponents(
+				new ButtonBuilder()
+					.setLabel('Opt-in here.')
+					.setStyle(ButtonStyle.Link)
+					.setURL(`https://www.randgallery.com/algo-collection/?address=${config.optin_token}`),
+			);
+		await interaction.editReply({ content: content + '\nAfter Optin please run **/register** again.', components: [row], ephemeral: true });
 	},
 
 	// Check and update roles for a wallet and discord ID
@@ -257,9 +284,9 @@ module.exports = {
 		// Assign necessary owner role
 		if (keepGoing) {
 			const row = await db.get('SELECT min(numnfts) as minnfts FROM roles');
-			let lowestOwnerRole = parseInt(row.minnfts);
+			const lowestOwnerRole = parseInt(row.minnfts);
 			console.log('lowest: ' + lowestOwnerRole);
-			if (numNFTs > lowestOwnerRole) {
+			if (numNFTs >= lowestOwnerRole) {
 				try {
 					// Add owner role
 					const ownerRoles = [];
@@ -267,9 +294,6 @@ module.exports = {
 						if (error) {
 							console.log(error);
 						} else {
-							if (lowestOwnerRole < thisRow.numnfts) {
-								lowestOwnerRole = thisRow.numnfts;
-							}
 							if (numNFTs >= parseInt(thisRow.numnfts)) {
 								try {
 									member.roles.add(`${thisRow.role_id}`);

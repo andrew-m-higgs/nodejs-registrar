@@ -90,6 +90,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 			doCheckSelect(interaction, config);
 			break;
 		}
+	} else if (interaction.isButton) {
+		// No Buttons used at the moment.
 	}
 });
 
