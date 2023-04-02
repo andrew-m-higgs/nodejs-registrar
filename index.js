@@ -53,6 +53,7 @@ client.once(Events.ClientReady, async (c) => {
 			registered_role_id: row['registered_role_id'],
 			registered_role_name: row['registered_role_name'],
 			optin_token: row['optin_asa_id'],
+			optin_tx_timeout: row['optin_tx_timeout'],
 		};
 		console.log('Config is set.');
 	} else {
