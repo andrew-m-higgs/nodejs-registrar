@@ -27,7 +27,7 @@ module.exports = {
 
 		if (isAdmin) {
 			const optin_token = await interaction.options.getString('optin-token');
-			const tx_timeout = await interaction.options.getSnumber('tx-timeout');
+			const tx_timeout = await interaction.options.getNumber('tx-timeout');
 			const embeds = [];
 			const content = 'Updating the Optin Token ASA for this project.';
 
