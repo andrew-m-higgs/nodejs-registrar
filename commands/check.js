@@ -45,7 +45,7 @@ module.exports = {
 					.addComponents(
 						new StringSelectMenuBuilder()
 							.setCustomId('check_select')
-							.setPlaceholder('Choose an NFT')
+							.setPlaceholder('Choose a Member')
 							.addOptions(options),
 					);
 				await interaction.editReply({ content: content, embeds: embeds, components: [components], ephemeral: true });
