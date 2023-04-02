@@ -40,7 +40,7 @@ module.exports = {
 					command: '/config-registered-role',
 				},
 				{
-					title: config.optin_token,
+					title: `${config.optin_token}\nMinutes: ${config.optin_tx_timeout}\nLink: https://algoxnft.com/asset/${config.optin_token}`,
 					field: 'Optin Token',
 					command: '/config-optin-token',
 				},
