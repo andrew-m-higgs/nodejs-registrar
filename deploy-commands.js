@@ -1,20 +1,25 @@
-const { REST, Routes } = require('discord.js');
-const { clientId, guildId, token } = require('./config.json');
-const fs = require('node:fs');
-const path = require('node:path');
+import { REST, Routes } from 'discord.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import 'dotenv/config';
+const clientId = process.env.clientId;
+const guildId = process.env.guildId;
+const token = process.env.token;
 
 const commands = [];
 // Grab all the command files from the commands directory you created earlier
-const commandsPath = path.join(__dirname, 'commands');
+const commandsPath = path.join(process.cwd(), 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
 // Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
-for (const filePath of commandFiles) {
-	const command = require(`./commands/${filePath}`);
-	if ('data' in command && 'execute' in command) {
-		commands.push(command.data.toJSON());
-	} else {
-		console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+async function addCommands() {
+	for (const filePath of commandFiles) {
+		const command = await import(`./commands/${filePath}`);
+		if (command.data && command.execute) {
+			commands.push(command.data.toJSON());
+		} else {
+			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+		}
 	}
 }
 
@@ -23,6 +28,7 @@ const rest = new REST({ version: '10' }).setToken(token);
 
 // and deploy your commands!
 (async () => {
+	await addCommands();
 	try {
 		console.log(`Started refreshing ${commands.length} application (/) commands.`);
 

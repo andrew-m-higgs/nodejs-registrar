@@ -1,14 +1,12 @@
-// Require the necessary discord.js classes
-const fs = require('node:fs');
-const path = require('node:path');
-const { Client, Events, Collection, GatewayIntentBits } = require('discord.js');
-const { token } = require('./config.json');
-const { doFlexSelect, doCheckSelect } = require('./components/selects.js');
+import fs from 'fs';
+import path from 'node:path';
+import { Client, Events, Collection, GatewayIntentBits } from 'discord.js';
+import { doFlexSelect, doCheckSelect } from './components/selects.js';
+import * as db_functions from './helpers/db-functions.js';
+import * as functions from './helpers/functions.js';
+import 'dotenv/config';
+const token = process.env.token;
 
-// Use sqlite3 module
-// const sqlite3 = require('sqlite3').verbose();
-const db_functions = require('./helpers/db-functions.js');
-const functions = require('./helpers/functions.js');
 let config = {};
 
 // Create a new client instance
@@ -21,19 +19,22 @@ const client = new Client({
 
 client.commands = new Collection();
 
-const commandsPath = path.join(__dirname, 'commands');
+const commandsPath = path.join(process.cwd(), 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-
-for (const file of commandFiles) {
-	const filePath = path.join(commandsPath, file);
-	const command = require(filePath);
-	// Set a new item in the collection with the key as the command name and the value as the exported module
-	if ('data' in command && 'execute' in command) {
-		client.commands.set(command.data.name, command);
-	} else {
-		console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+async function addCommands() {
+	for (const file of commandFiles) {
+		const filePath = path.join(commandsPath, file);
+		const command = await import(`${filePath}`);
+		// Set a new item in the collection with the key as the command name and the value as the exported module
+		if ('data' in command && 'execute' in command) {
+			client.commands.set(command.data.name, command);
+		} else {
+			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+		}
 	}
 }
+addCommands();
+
 // When the client is ready, run this code (only once)
 // We use 'c' for the event parameter to keep it separate from the already defined 'client'
 client.once(Events.ClientReady, async (c) => {

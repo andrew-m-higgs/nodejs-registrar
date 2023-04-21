@@ -2,15 +2,19 @@
   "name": "nodejs-registrar",
   "version": "1.0.0",
   "description": "Nodejs registration Discord bot for Algorand NFT projects.",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "info"
+    "start": "node index.js"
   },
   "author": "andrew.m.higgs@gmail.com",
   "license": "ISC",
   "dependencies": {
+    "algosdk": "^2.2.0",
+    "cids": "^1.1.9",
     "discord.js": "^14.8.0",
     "dotenv": "^16.0.3",
+    "multiformats": "^11.0.2",
     "node-fetch": "^2.6.9",
     "sqlite": "^4.1.2",
     "sqlite3": "^5.1.6"

@@ -1,23 +1,20 @@
-const { SlashCommandBuilder } = require('discord.js');
-// const sqlite3 = require('sqlite3').verbose();
-const functions = require('../helpers/functions.js');
-const db_functions = require('../helpers/db-functions.js');
+import { SlashCommandBuilder } from 'discord.js';
+import * as functions from '../helpers/functions.js';
+import * as db_functions from '../helpers/db-functions.js';
 
 // ToDo: Check if 0 creator assets before flexing random.
 
-module.exports = {
+export const data = new SlashCommandBuilder()
+	.setName('flex-random')
+	.setDescription('Flex a random NFT from the collection.');
 
-	data: new SlashCommandBuilder()
-		.setName('flex-random')
-		.setDescription('Flex a random NFT from the collection.'),
-	async execute(interaction, config) {
-		await interaction.reply('Flexing a random NFT from the collection.');
+export async function execute(interaction, config) {
+	await interaction.reply('Flexing a random NFT from the collection.');
 
-		const db = await db_functions.dbOpen();
+	const db = await db_functions.dbOpen();
 
-		const sql = 'SELECT * FROM assets ORDER BY RANDOM() LIMIT 1';
-		const flexAsset = await db.get(sql);
+	const sql = 'SELECT * FROM assets ORDER BY RANDOM() LIMIT 1';
+	const flexAsset = await db.get(sql);
 
-		functions.flexAsset(interaction, config, flexAsset, 'RANDOM');
-	},
-};
+	functions.flexAsset(interaction, config, flexAsset, 'RANDOM');
+}

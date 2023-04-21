@@ -1,12 +1,9 @@
-const { SlashCommandBuilder } = require('discord.js');
+import { SlashCommandBuilder } from 'discord.js';
 
+export const data = new SlashCommandBuilder()
+	.setName('ping')
+	.setDescription('Replies with Pong if Bot is ALIVE!');
 
-module.exports = {
-	data: new SlashCommandBuilder()
-		.setName('ping')
-		.setDescription('Replies with Pong if Bot is ALIVE!'),
-
-	async execute(interaction) {
-		await interaction.reply('Pong! It\'s **ALIVE**!!');
-	},
-};
+export async function execute(interaction) {
+	await interaction.reply('Pong! It\'s **ALIVE**!!');
+}
