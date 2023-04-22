@@ -3,6 +3,7 @@ import {
 	StringSelectMenuBuilder,
 } from 'discord.js';
 import fetch from 'node-fetch';
+import algosdk from 'algosdk';
 import { CID } from 'multiformats/cid';
 import { decodeAddress as decode } from 'algosdk';
 import * as digest from 'multiformats/hashes/digest';
@@ -238,14 +239,26 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 	// Get Member Assets
 	if (keepGoing) {
 		try {
-			const response = await fetch('https://algoindexer.algoexplorerapi.io/v2/accounts/' + wallet_string + '/assets');
-			const assetResult = await response.json();
-			for (let j = 0; j < assetResult.assets.length; j++) {
-				const asset = assetResult.assets[j];
-				if (asset.amount > 0) {
-					if (creatorAssets.includes(asset['asset-id'])) {
-						memberAssets.push(asset['asset-id']);
-						numNFTs++;
+			const indexerClient = new algosdk.Indexer('', 'https://mainnet-idx.algonode.cloud', '');
+			let nextToken = '';
+
+			while (nextToken !== undefined) {
+				const response = await indexerClient
+					.lookupAccountAssets(wallet_string)
+					.limit(500)
+					.nextToken(nextToken)
+					.do();
+
+				nextToken = response['next-token'];
+				const accountAssets = response.assets;
+				// console.log(JSON.stringify(accountAssets));
+				for (let i = 0; i < accountAssets.length; i++) {
+					const asset = accountAssets[i];
+					if (asset.amount > 0) {
+						if (creatorAssets.includes(asset['asset-id'])) {
+							memberAssets.push(asset['asset-id']);
+							numNFTs++;
+						}
 					}
 				}
 			}
@@ -306,14 +319,16 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 			try {
 				// Add owner role
 				const ownerRoles = [];
+				let roleAssigned = false;
 				db.each('SELECT * FROM roles ORDER BY numnfts DESC', async (error, thisRow) => {
 					if (error) {
 						console.log(error);
 					} else {
-						if (numNFTs >= parseInt(thisRow.numnfts)) {
+						if ((numNFTs >= parseInt(thisRow.numnfts)) && (!roleAssigned)) {
 							try {
 								member.roles.add(`${thisRow.role_id}`);
 								console.log('Role assigned: ' + thisRow.role_name + ' (' + thisRow.role_id + ')');
+								roleAssigned = true;
 								colour = colourGreen;
 								embed_content = ':white_check_mark: Owner role has been assigned: **' + thisRow.role_name + '**.';
 								embeds.push({ type: 'rich', color: colour, description: embed_content });
@@ -321,6 +336,7 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 							} catch {
 								// Error
 								keepGoing = false;
+								roleAssigned = false;
 								embed_content = ':no_entry: There was an error assigning the owner role: **' + thisRow.role_name + '**.';
 								colour = colourRed;
 								embeds.push({ type: 'rich', color: colour, description: embed_content });
