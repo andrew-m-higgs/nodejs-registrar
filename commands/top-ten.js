@@ -7,7 +7,6 @@ export const data = new SlashCommandBuilder()
 	.setDescription('View a list of the top ten registered holders.');
 
 export async function execute(interaction, config) {
-	const content = 'Top ten registered holders for ' + config.collection_name + '.';
 	const embeds = [];
 	const fields = [];
 	let first = true;
@@ -16,7 +15,7 @@ export async function execute(interaction, config) {
 	const sql = 'SELECT nickname, numnfts FROM members ORDER BY numnfts DESC LIMIT 10';
 	await db.each(sql, async (err, row) => {
 		if (err) {
-			console.log('[ERROR]: running sql. (' + sql + ').');
+			console.log('[ERROR]: running sql. (' + sql + ').' + config.collection_name);
 		} else if (first) {
 			fields.push(`**__${row.numnfts} : ${row.nickname}__**`);
 			first = false;
