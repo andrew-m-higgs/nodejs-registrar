@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, StringSelectMenuBuilder, ActionRowBuilder } from 'discord.js';
+import { SlashCommandBuilder, StringSelectMenuOptionBuilder } from 'discord.js';
 import * as functions from '../helpers/functions.js';
 import * as db_functions from '../helpers/db-functions.js';
 import 'dotenv/config';
@@ -36,6 +36,7 @@ export async function execute(interaction, config) {
 
 		try {
 			assets = row.asset_ids.split(',');
+			assets.sort();
 
 			if (assets.length > 0) {
 				// Have assets to flex
@@ -43,23 +44,46 @@ export async function execute(interaction, config) {
 				const options = [];
 				for (let i = 0; i < assets.length; i++) {
 					const nft = await functions.getNFT(assets[i]);
-					const new_opt = {
-						label: `${nft.name}`,
-						value: `${nft.asset_id}`,
-					};
+					const new_opt = new StringSelectMenuOptionBuilder()
+						.setLabel(`${nft.name}`)
+						.setValue(`${nft.asset_id}`);
+					// };
 					options.push(new_opt);
 				}
 				message = 'You have ' + assets.length + ' assets to choose from.';
 				colour = parseInt(Green);
 				embeds.push({ 'type': 'rich', 'title': message, 'color': colour });
-				const components = new ActionRowBuilder()
-					.addComponents(
-						new StringSelectMenuBuilder()
-							.setCustomId('flex_select')
-							.setPlaceholder('Choose an NFT')
-							.addOptions(options),
-					);
-				await interaction.editReply({ content: content, embeds: embeds, components: [components], ephemeral: true });
+				let page = 0;
+				await interaction.editReply({
+					content: content,
+					embeds: embeds,
+					components: functions.getComponents(page, options),
+					ephemeral: true,
+				});
+				const msg = await interaction.fetchReply();
+				const buttonListener = async (buttonInteraction) => {
+					if (!buttonInteraction.isButton()) return;
+					if (buttonInteraction.message.id != msg.id) return;
+
+					switch (buttonInteraction.customId) {
+					case 'previous_page':
+						page--;
+						break;
+					case 'next_page':
+						page++;
+						break;
+					case 'rand_flex':
+						functions.flexAsset(interaction, config, await functions.getNFT(assets[Math.round(Math.random() * assets.length)]), 'OWN');
+						break;
+					}
+
+					await buttonInteraction.update({
+						content: content,
+						embeds: embeds,
+						components: functions.getComponents(page, options),
+					});
+				};
+				interaction.client.on('interactionCreate', buttonListener);
 			}
 		} catch {
 			console.log('[ERROR]: There seem to be no assets to flex.');

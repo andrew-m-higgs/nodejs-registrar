@@ -1,4 +1,7 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import {
+	ActionRowBuilder, ButtonBuilder, ButtonStyle,
+	StringSelectMenuBuilder,
+} from 'discord.js';
 import fetch from 'node-fetch';
 import { CID } from 'multiformats/cid';
 import { decodeAddress as decode } from 'algosdk';
@@ -14,7 +17,7 @@ export async function delay(time) {
 }
 
 export async function addrToCid(template, addr) {
-	const [, , ver, codec, , ] = template.split(':');
+	const [, , ver, codec, ,] = template.split(':');
 	const mhash = digest.create(mfsha2.sha256.code, decode(addr).publicKey);
 	return CID.create(ver * 1, codec == 'dag-pb' ? 0x70 : 0x55, mhash).toV1().toString();
 }
@@ -113,7 +116,7 @@ export async function flexAsset(interaction, config, asset, flexType) {
 		break;
 	}
 
-	await interaction.editReply({
+	await interaction.channel.send({
 		channel_id: `${channel_id}`,
 		components: [
 			{
@@ -367,4 +370,73 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		}
 	}
+}
+
+
+// Multiple selects when > than 25 options
+export function getSelectMenu(page, options) {
+	const selectMenu = new StringSelectMenuBuilder();
+	selectMenu.setCustomId('flex_select');
+	const opts = [];
+	for (let i = 25 * page; i < options.length && i < 25 * (page + 1); i++) {
+		opts.push(options[i]);
+	}
+	selectMenu.addOptions(opts);
+	return selectMenu;
+}
+
+export function getButtons(page, options) {
+	const buttons = [];
+	if (page > 0) {
+		buttons.push(
+			new ButtonBuilder()
+				.setCustomId('previous_page')
+				.setStyle('Secondary')
+				.setEmoji('⬅'),
+		);
+	} else {
+		buttons.push(
+			new ButtonBuilder()
+				.setCustomId('previous_page')
+				.setStyle('Secondary')
+				.setDisabled(true)
+				.setEmoji('⬅'),
+		);
+	}
+	buttons.push(
+		new ButtonBuilder()
+			.setCustomId('rand_flex')
+			.setStyle('Danger')
+			.setLabel('Random'),
+	);
+	if (25 * (page + 1) < options.length) {
+		buttons.push(
+			new ButtonBuilder()
+				.setCustomId('next_page')
+				.setStyle('Secondary')
+				.setEmoji('➡'),
+		);
+	} else {
+		buttons.push(
+			new ButtonBuilder()
+				.setCustomId('next_page')
+				.setStyle('Secondary')
+				.setDisabled(true)
+				.setEmoji('➡'),
+		);
+	}
+	return buttons;
+}
+
+export function getComponents(page, options) {
+	return [
+		new ActionRowBuilder()
+			.addComponents([
+				getSelectMenu(page, options),
+			]),
+		new ActionRowBuilder()
+			.addComponents(
+				getButtons(page, options),
+			),
+	];
 }
