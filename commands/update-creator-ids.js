@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from 'discord.js';
-import fetch from 'node-fetch';
+import algosdk from 'algosdk';
 import * as functions from '../helpers/functions.js';
 import * as db_functions from '../helpers/db-functions.js';
 import 'dotenv/config';
@@ -23,36 +23,46 @@ export async function execute(interaction, config) {
 
 		// Get an array of creator wallets from db
 		const walletStrings = config.wallet_strings;
+		const indexerClient = new algosdk.Indexer('', 'https://mainnet-idx.algonode.cloud', '');
+
 
 		for (let i = 0; i < walletStrings.length; i++) {
 			console.log(walletStrings[i]);
 			let walletASANum = 0;
-			const url = `https://algoindexer.algoexplorerapi.io/v2/accounts/${walletStrings[i]}/created-assets?limit=1000`;
-			const response = await fetch(url);
-			const assetResult = await response.json();
-			for (let j = 0; j < assetResult.assets.length; j++) {
-				const asset = assetResult.assets[j];
-				if (!asset.deleted) {
-					walletASANum++;
-					let ipfs = '';
-					const assetUrl = asset.params.url;
-					if (assetUrl.toUpperCase().startsWith('TEMPLATE-IPFS://')) {
-						const address = asset.params.reserve;
-						// ipfs = await functions.addrToCid(assetUrl, address);
-						ipfs = address;
-					} else {
-						ipfs = assetUrl.split('/').pop().split('#').shift();
-					}
-					const sql = `INSERT INTO assets(asset_id, name, ipfs, qty) VALUES("${asset.index}", "${asset.params.name}", "${ipfs}", ${asset.params.total}) ON CONFLICT(asset_id) DO UPDATE SET name = "${asset.params.name}", ipfs = "${ipfs}", qty = ${asset.params.total}`;
-					try {
-						db.run(sql);
-					} catch (err) {
-						console.log('Problem SQL: ' + sql);
-						console.error(err.message);
+			let nextToken = '';
+
+			while (nextToken !== undefined) {
+				const response = await indexerClient
+					.lookupAccountCreatedAssets(walletStrings[i])
+					.limit(500)
+					.nextToken(nextToken)
+					.do();
+
+				nextToken = response['next-token'];
+				// console.log(JSON.stringify(accountAssets));
+				for (let j = 0; j < response.assets.length; j++) {
+					const asset = response.assets[j];
+					if (!asset.deleted) {
+						walletASANum++;
+						let ipfs = '';
+						const assetUrl = asset.params.url;
+						if (assetUrl.toUpperCase().startsWith('TEMPLATE-IPFS://')) {
+							const address = asset.params.reserve;
+							ipfs = await functions.addrToCid(assetUrl, address);
+						} else {
+							ipfs = assetUrl.split('/').pop().split('#').shift();
+						}
+						const sql = `INSERT INTO assets(asset_id, name, ipfs, qty) VALUES("${asset.index}", "${asset.params.name}", "${ipfs}", ${asset.params.total}) ON CONFLICT(asset_id) DO UPDATE SET name = "${asset.params.name}", ipfs = "${ipfs}", qty = ${asset.params.total}`;
+						try {
+							db.run(sql);
+						} catch (err) {
+							console.log('Problem SQL: ' + sql);
+							console.error(err.message);
+						}
 					}
 				}
-				// functions.delay(1000);
 			}
+
 			const embed = {
 				'type': 'rich',
 				'title': walletStrings[i],
