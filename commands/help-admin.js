@@ -24,6 +24,10 @@ export async function execute(interaction, config) {
 				value: 'The role assigned to members who are allowed to configure this Bot.',
 			},
 			{
+				name: '/config-all-owner-roles',
+				value: 'Set whether or not members get all the roles for which they qualify or just the highest one.',
+			},
+			{
 				name: '/config-registered-role',
 				value: 'The role given to all members who register a wallet in this project.',
 			},
