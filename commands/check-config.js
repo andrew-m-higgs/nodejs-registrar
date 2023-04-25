@@ -15,6 +15,10 @@ export async function execute(interaction, config) {
 	if (isAdmin) {
 		await interaction.reply({ content: 'Checking your configuration.', ephemeral: true });
 		const embeds = [];
+		let all_owner_roles = 'False';
+		if (config.all_owner_roles == 0) {
+			all_owner_roles = 'True';
+		}
 		const embed_details = [
 			{
 				title: config.collection_name,
@@ -39,6 +43,11 @@ export async function execute(interaction, config) {
 			{
 				title: config.registered_role_name,
 				field: 'Registered Role',
+				command: '/config-registered-role',
+			},
+			{
+				title: all_owner_roles,
+				field: 'Give all owner roles for which the member qualifies',
 				command: '/config-registered-role',
 			},
 			{

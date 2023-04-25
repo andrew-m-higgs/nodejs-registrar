@@ -328,7 +328,10 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 							try {
 								member.roles.add(`${thisRow.role_id}`);
 								console.log('Role assigned: ' + thisRow.role_name + ' (' + thisRow.role_id + ')');
-								roleAssigned = true;
+								// If all_owner_roles is false (<>0) then don't changed roleAssigned
+								if (config.all_owner_roles != 0) {
+									roleAssigned = true;
+								}
 								colour = colourGreen;
 								embed_content = ':white_check_mark: Owner role has been assigned: **' + thisRow.role_name + '**.';
 								embeds.push({ type: 'rich', color: colour, description: embed_content });

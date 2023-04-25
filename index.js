@@ -44,7 +44,7 @@ client.once(Events.ClientReady, async (c) => {
 		const db = await db_functions.dbOpen();
 		console.log('Database is ready.');
 		const row = await db.get('SELECT * FROM config');
-		// console.log('Config row: ' + JSON.stringify(row));
+		// [TODO]: Make config a class...
 		config = {
 			collection_name: row['collection_name'],
 			wallet_strings: await functions.getCreatorWallets(row['wallet_strings']),
@@ -53,10 +53,12 @@ client.once(Events.ClientReady, async (c) => {
 			admin_role_name: row['admin_role_name'],
 			registered_role_id: row['registered_role_id'],
 			registered_role_name: row['registered_role_name'],
+			all_owner_roles: row['all_owner_roles'],
 			optin_token: row['optin_asa_id'],
 			optin_tx_timeout: row['optin_tx_timeout'],
 		};
 		console.log('Config is set.');
+		console.log(config);
 	} else {
 		console.error('[ERROR]: There was a problem opening the database.');
 		return false;
