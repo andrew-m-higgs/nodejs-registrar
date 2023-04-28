@@ -58,7 +58,6 @@ client.once(Events.ClientReady, async (c) => {
 			optin_tx_timeout: row['optin_tx_timeout'],
 		};
 		console.log('Config is set.');
-		console.log(config);
 	} else {
 		console.error('[ERROR]: There was a problem opening the database.');
 		return false;
