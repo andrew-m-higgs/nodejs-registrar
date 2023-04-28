@@ -11,7 +11,7 @@ export async function execute(interaction, config) {
 	const fields = [];
 
 	const db = await db_functions.dbOpen();
-	const sql = 'SELECT nickname, numnfts FROM members ORDER BY numnfts DESC, nickname ASC LIMIT 10';
+	const sql = 'SELECT nickname, numnfts FROM members ORDER BY numnfts DESC, nickname COLLATE NOCASE ASC LIMIT 10';
 	let num = 0;
 	let leaderstr = '';
 	let haveleader = false;

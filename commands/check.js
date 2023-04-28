@@ -22,7 +22,7 @@ export async function execute(interaction, config) {
 
 	if (isAdmin) {
 		// Is an admin or owner
-		const sql = 'SELECT nickname, wallet_string, member_id FROM members ORDER BY nickname ASC';
+		const sql = 'SELECT nickname, wallet_string, member_id FROM members ORDER BY nickname COLLATE NOCASE ASC';
 		const db = await db_functions.dbOpen();
 
 		try {
