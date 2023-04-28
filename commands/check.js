@@ -35,7 +35,7 @@ export async function execute(interaction, config) {
 				}
 				const new_opt = {
 					label: `${row.nickname}`,
-					value: `${row.nickname}^*^*^${row.wallet_string}^*^*^${row.member_id}`,
+					value: `${row.member_id}`,
 				};
 				options.push(new_opt);
 			});
