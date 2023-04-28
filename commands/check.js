@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
+import { SlashCommandBuilder } from 'discord.js';
 import * as functions from '../helpers/functions.js';
 import * as db_functions from '../helpers/db-functions.js';
 import 'dotenv/config';
@@ -43,6 +43,7 @@ export async function execute(interaction, config) {
 			message = 'You have ' + rows + ' members to choose from.';
 			colour = colourGreen;
 			embeds.push({ 'type': 'rich', 'title': message, 'color': colour });
+			/*
 			const components = new ActionRowBuilder()
 				.addComponents(
 					new StringSelectMenuBuilder()
@@ -50,7 +51,35 @@ export async function execute(interaction, config) {
 						.setPlaceholder('Choose a Member')
 						.addOptions(options),
 				);
-			await interaction.editReply({ content: content, embeds: embeds, components: [components], ephemeral: true });
+			*/
+			let page = 0;
+			await interaction.editReply({
+				content: content,
+				embeds: embeds,
+				components: functions.getComponents(page, options, 'check_select', false),
+				ephemeral: true,
+			});
+			const msg = await interaction.fetchReply();
+			const buttonListener = async (buttonInteraction) => {
+				if (!buttonInteraction.isButton()) return;
+				if (buttonInteraction.message.id != msg.id) return;
+
+				switch (buttonInteraction.customId) {
+				case 'previous_page':
+					page--;
+					break;
+				case 'next_page':
+					page++;
+					break;
+				}
+
+				await buttonInteraction.update({
+					content: content,
+					embeds: embeds,
+					components: functions.getComponents(page, options, 'check_select', false),
+				});
+			};
+			interaction.client.on('interactionCreate', buttonListener);
 		} catch {
 			console.log('[ERROR]: There seem to be no members to check.');
 			message = ':no_entry: There seem to be no members to check.';

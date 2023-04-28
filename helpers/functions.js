@@ -393,9 +393,9 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 
 
 // Multiple selects when > than 25 options
-export function getSelectMenu(page, options) {
+export function getSelectMenu(page, options, name) {
 	const selectMenu = new StringSelectMenuBuilder();
-	selectMenu.setCustomId('flex_select');
+	selectMenu.setCustomId(name);
 	const opts = [];
 	for (let i = 25 * page; i < options.length && i < 25 * (page + 1); i++) {
 		opts.push(options[i]);
@@ -404,7 +404,7 @@ export function getSelectMenu(page, options) {
 	return selectMenu;
 }
 
-export function getButtons(page, options) {
+export function getButtons(page, options, show_random_btn = false) {
 	const buttons = [];
 	if (page > 0) {
 		buttons.push(
@@ -422,12 +422,14 @@ export function getButtons(page, options) {
 				.setEmoji('⬅'),
 		);
 	}
-	buttons.push(
-		new ButtonBuilder()
-			.setCustomId('rand_flex')
-			.setStyle('Danger')
-			.setLabel('Random'),
-	);
+	if (show_random_btn) {
+		buttons.push(
+			new ButtonBuilder()
+				.setCustomId('rand_flex')
+				.setStyle('Danger')
+				.setLabel('Random'),
+		);
+	}
 	if (25 * (page + 1) < options.length) {
 		buttons.push(
 			new ButtonBuilder()
@@ -447,15 +449,15 @@ export function getButtons(page, options) {
 	return buttons;
 }
 
-export function getComponents(page, options) {
+export function getComponents(page, options, name, show_random_btn = false) {
 	return [
 		new ActionRowBuilder()
 			.addComponents([
-				getSelectMenu(page, options),
+				getSelectMenu(page, options, name),
 			]),
 		new ActionRowBuilder()
 			.addComponents(
-				getButtons(page, options),
+				getButtons(page, options, show_random_btn),
 			),
 	];
 }

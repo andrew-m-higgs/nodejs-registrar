@@ -57,7 +57,7 @@ export async function execute(interaction, config) {
 				await interaction.editReply({
 					content: content,
 					embeds: embeds,
-					components: functions.getComponents(page, options),
+					components: functions.getComponents(page, options, 'flex_select', true),
 					ephemeral: true,
 				});
 				const msg = await interaction.fetchReply();
@@ -80,7 +80,7 @@ export async function execute(interaction, config) {
 					await buttonInteraction.update({
 						content: content,
 						embeds: embeds,
-						components: functions.getComponents(page, options),
+						components: functions.getComponents(page, options, 'flex_select', true),
 					});
 				};
 				interaction.client.on('interactionCreate', buttonListener);
