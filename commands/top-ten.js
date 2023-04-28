@@ -46,12 +46,12 @@ export async function execute(interaction, config) {
 			}
 			// Fix thie width of nickname
 			if (row.nickname.length > 19) {
-				namestr = row.nickname.slice(0, 17) + '...';
-			} else if (row.nickname.length == 19) {
+				namestr = row.nickname.slice(0, 13) + '...';
+			} else if (row.nickname.length == 15) {
 				namestr = row.nickname;
 			} else {
 				namestr = row.nickname;
-				for (let i = row.nickname.length; i < 20; i++) {
+				for (let i = row.nickname.length; i < 16; i++) {
 					namestr += ' ';
 				}
 			}
