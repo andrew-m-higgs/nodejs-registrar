@@ -25,7 +25,9 @@ export const data = new SlashCommandBuilder()
 		option
 			.setName('search_string')
 			.setDescription('The seacrh string to match the wallet against.')
-			.setRequired(true),
+			.setRequired(true)
+			.setMinLength(3)
+			.setMaxLength(58),
 	);
 
 
@@ -72,16 +74,19 @@ export async function execute(interaction, config) {
 				content_string += '**' + row.wallet_string + '**\n' + row.nickname + '\n\n';
 			});
 
-			message = 'You have ' + rows + ' matching wallets.\n\n' + content_string;
+			message = 'You have ' + rows + ' matching wallets.\n\n';
+			console.log('Message: ' + message);
+			console.log('Content: ' + content_string);
 			colour = colourGreen;
 			embeds.push({
 				type: 'rich',
-				title: message,
+				description: content_string,
 				color: colour,
 			});
 
 			await interaction.editReply({
 				content: message,
+				embeds: embeds,
 				ephemeral: true,
 			});
 		} catch {
