@@ -90,11 +90,11 @@ export async function execute(interaction, config) {
 				ephemeral: true,
 			});
 		} catch {
-			console.log('[ERROR]: There seem to be no wallets to match.');
-			message = ':no_entry: There seem to be no wallets to match.';
+			console.log('[ERROR]: There seem to be no wallets which match.');
+			message = ':no_entry: There seem to be no wallets which match.';
 			colour = colourRed;
-			embeds.push({ 'type': 'rich', 'title': message, 'color': colour });
-			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
+			// embeds.push({ 'type': 'rich', 'description': message, 'color': colour });
+			await interaction.editReply({ content: message, ephemeral: true });
 		}
 	} else {
 		await interaction.reply(NoPermission);
