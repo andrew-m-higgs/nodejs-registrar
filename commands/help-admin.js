@@ -56,6 +56,10 @@ export async function execute(interaction, config) {
 				value: 'Used to view the current configurtion of this project.',
 			},
 			{
+				name: '/check-for-wallet',
+				value: 'Used to search the database for a specific wallet address.',
+			},
+			{
 				name: '/info',
 				value: 'Add key value pairs to display when someone runs the /info command.',
 			},
