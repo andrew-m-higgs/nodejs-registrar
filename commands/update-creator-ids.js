@@ -39,25 +39,28 @@ export async function execute(interaction, config) {
 					.do();
 
 				nextToken = response['next-token'];
-				// console.log(JSON.stringify(accountAssets));
+
 				for (let j = 0; j < response.assets.length; j++) {
 					const asset = response.assets[j];
+					console.log(JSON.stringify(asset));
 					if (!asset.deleted) {
-						walletASANum++;
 						let ipfs = '';
 						const assetUrl = asset.params.url;
-						if (assetUrl.toUpperCase().startsWith('TEMPLATE-IPFS://')) {
-							const address = asset.params.reserve;
-							ipfs = await functions.addrToCid(assetUrl, address);
-						} else {
-							ipfs = assetUrl.split('/').pop().split('#').shift();
-						}
-						const sql = `INSERT INTO assets(asset_id, name, ipfs, qty) VALUES("${asset.index}", "${asset.params.name}", "${ipfs}", ${asset.params.total}) ON CONFLICT(asset_id) DO UPDATE SET name = "${asset.params.name}", ipfs = "${ipfs}", qty = ${asset.params.total}`;
-						try {
-							db.run(sql);
-						} catch (err) {
-							console.log('Problem SQL: ' + sql);
-							console.error(err.message);
+						if (assetUrl) {
+							walletASANum++;
+							if (assetUrl.toUpperCase().startsWith('TEMPLATE-IPFS://')) {
+								const address = asset.params.reserve;
+								ipfs = await functions.addrToCid(assetUrl, address);
+							} else {
+								ipfs = assetUrl.split('/').pop().split('#').shift();
+							}
+							const sql = `INSERT INTO assets(asset_id, name, ipfs, qty) VALUES("${asset.index}", "${asset.params.name}", "${ipfs}", ${asset.params.total}) ON CONFLICT(asset_id) DO UPDATE SET name = "${asset.params.name}", ipfs = "${ipfs}", qty = ${asset.params.total}`;
+							try {
+								db.run(sql);
+							} catch (err) {
+								console.log('Problem SQL: ' + sql);
+								console.error(err.message);
+							}
 						}
 					}
 				}
