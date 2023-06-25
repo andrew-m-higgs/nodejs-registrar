@@ -2,7 +2,6 @@ import {
 	ActionRowBuilder, ButtonBuilder, ButtonStyle,
 	StringSelectMenuBuilder,
 } from 'discord.js';
-import fetch from 'node-fetch';
 import algosdk from 'algosdk';
 import { CID } from 'multiformats/cid';
 import { decodeAddress as decode } from 'algosdk';
@@ -182,9 +181,13 @@ export async function isOptedIn(interaction, config, wallet_string) {
 		// const currentTime = new Date();
 		// const mathTime = new Date(currentTime - tx_timeout);
 		const finalTime = new Date(Date.now() - tx_timeout).toISOString();
-		const response = await fetch('https://algoindexer.algoexplorerapi.io/v2/accounts/' + wallet_string + '/transactions?tx-type=axfer&after-time=' + finalTime);
-		const txResult = await response.json();
-		const txs = txResult.transactions;
+		const indexerClient = new algosdk.Indexer('', 'https://mainnet-idx.algonode.cloud', '');
+		const response = await indexerClient
+			.lookupAccountTransactions(wallet_string)
+			.afterTime(finalTime)
+			.do();
+		// const txResult = await response.json();
+		const txs = response.transactions;
 		for (let j = 0; j < txs.length; j++) {
 			if ((txs[j]['asset-transfer-transaction'] != undefined) && (txs[j]['asset-transfer-transaction']['asset-id'] == optin_token)) {
 				return true;
