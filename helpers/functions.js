@@ -214,30 +214,81 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 	const member = await getMember(interaction, member_id);
 	const creatorAssets = [];
 	const colourRed = parseInt(Red);
-	const colourGreen = parseInt(Green);
 
 	const memberAssets = [];
+	const memberASAs = [];
 	let numNFTs = 0;
-	const embeds = [];
-	let embed_content = '';
-	let colour = colourGreen;
-	let keepGoing = true;
+	let reg_embed_content = '';
+	let owner_embed_content = '';
+	let asa_embed_content = '';
+	const reg_title = '**__Register Information__**';
+	const owner_title = '**__Owner Roles__**';
+	const asa_title = '**__ASA Roles__**';
+	const embeds = [
+		{
+			type: 'rich',
+			title: reg_title,
+		},
+		{
+			type: 'rich',
+			title: owner_title,
+		},
+		{
+			type: 'rich',
+			title: asa_title,
+		},
+	];
+	const reg_colour = 0x999933;
+	const owner_colour = 0xFF9900;
+	const asa_colour = 0xFF33FF;
 
+	let keepGoing = true;
+	const asaRoles = [];
 
 	// Get Creator Assets
 	const db = await db_functions.dbOpen();
-	db.each('SELECT asset_id FROM assets ORDER BY asset_id', async (error, row) => {
+	const sqlAssets = 'SELECT asset_id FROM assets ORDER BY asset_id';
+	db.each(sqlAssets, async (error, row) => {
 		if (error) {
+			console.log('ERROR: Collecting the creator assets. (helpers/functions.js#updateRoles)');
+			console.log('ERROR: Running sql. (' + sqlAssets + ').');
 			console.log(error);
 			keepGoing = false;
-			colour = colourRed;
-			embed_content = ':no_entry: We had an issue collecting the creator assets. Please try again later or contact support.';
-			embeds.push({ type: 'rich', color: colour, description: embed_content });
+			reg_embed_content = reg_embed_content + ':no_entry: We had an issue collecting the creator assets. Please try again later or contact support.\n';
+			embeds[0] = { type: 'rich', title: reg_title, color: colourRed, description: reg_embed_content };
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		} else {
 			creatorAssets.push(row['asset_id']);
 		}
 	});
+
+	// Get ASA roles
+	if (keepGoing) {
+		const sqlASA = 'SELECT * FROM asaroles ORDER BY asa_name ASC, role_name ASC, asa_qty DESC';
+		await db.each(sqlASA, async (error, row) => {
+			if (error) {
+				console.log('ERROR: Collecting the ASA roles. (helpers/functions.js#updateRoles)');
+				console.log('ERROR: Running sql. (' + sqlASA + ').');
+				console.log(error);
+			}
+			const asa_id = `${row.asa_id}`;
+			const asa_name = `${row.asa_name}`;
+			const role_id = `${row.role_id}`;
+			const role_name = `${row.role_name}`;
+			const asa_qty = `${row.asa_qty}`;
+			if (!Object.keys(asaRoles).includes(asa_id)) {
+				asaRoles[asa_id] = [];
+				console.log('Key added ' + asa_id);
+			}
+			asaRoles[asa_id].push({
+				asa_id: asa_id,
+				asa_name: asa_name,
+				role_id: role_id,
+				role_name: role_name,
+				asa_qty: asa_qty,
+			});
+		});
+	}
 
 	// Get Member Assets
 	if (keepGoing) {
@@ -258,19 +309,30 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 				for (let i = 0; i < accountAssets.length; i++) {
 					const asset = accountAssets[i];
 					if (asset.amount > 0) {
-						if (creatorAssets.includes(asset['asset-id'])) {
-							memberAssets.push(asset['asset-id']);
+						const asa_id = asset['asset-id'];
+						// console.log('ASA: ' + asa_id);
+						if (creatorAssets.includes(asa_id)) {
+							memberAssets.push(asa_id);
 							numNFTs++;
+						}
+						if (Object.keys(asaRoles).includes(`${asa_id}`)) {
+							memberASAs.push(
+								{
+									asa_id: asa_id,
+									asa_qty: asset.amount,
+								},
+							);
 						}
 					}
 				}
+				// console.log('memberASAs: ' + JSON.stringify(memberASAs));
 			}
 		} catch {
 			// Error
 			keepGoing = false;
-			colour = colourRed;
-			embed_content = ':no_entry: We had an issue collecting this wallets assets. Please try again later or contact support.';
-			embeds.push({ type: 'rich', color: colour, description: embed_content });
+			console.log('ERROR: Could not get wallet assets. (helpers/functions.js#updateRoles)');
+			reg_embed_content = reg_embed_content + ':no_entry: We had an issue collecting this wallets assets. Please try again later or contact support.\n';
+			embeds[0] = { type: 'rich', title: reg_title, color: colourRed, description: reg_embed_content };
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		}
 	}
@@ -280,16 +342,15 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 		const sql = `INSERT INTO members(member_id, nickname, wallet_string, asset_ids, numnfts) VALUES("${member_id}", "${nickname}", "${wallet_string}", "${memberAssets}", ${numNFTs}) ON CONFLICT(member_id) DO UPDATE set wallet_string = "${wallet_string}", nickname = "${nickname}", asset_ids = "${memberAssets}", numnfts = ${numNFTs};`;
 		try {
 			db.run(sql);
-			embed_content = ':white_check_mark: Successfully registered the wallet (' + wallet_string + ').';
-			colour = colourGreen;
-			embeds.push({ type: 'rich', color: colour, description: embed_content });
+			reg_embed_content = reg_embed_content + ':white_check_mark: Successfully registered the wallet.\n';
+			embeds[0] = { type: 'rich', title: reg_title, color: reg_colour, description: reg_embed_content };
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		} catch (err) {
 			// Error
 			keepGoing = false;
-			embed_content = ':no_entry: There was an error registering the wallet (' + wallet_string + ').';
-			colour = colourRed;
-			embeds.push({ type: 'rich', color: colour, description: embed_content });
+			console.log('ERROR: Could not register wallet (' + wallet_string + '). (helpers/functions.js#updateRoles)');
+			reg_embed_content = reg_embed_content + ':no_entry: There was an error registering the wallet.\n';
+			embeds[0] = { type: 'rich', title: reg_title, color: colourRed, description: reg_embed_content };
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		}
 	}
@@ -299,16 +360,15 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 		try {
 			member.roles.add(`${config.registered_role_id}`);
 			console.log('Role assigned: ' + config.registered_role_name + ' (' + config.registered_role_id + ')');
-			embed_content = ':white_check_mark: Registered role has been assigned: **' + config.registered_role_name + '**.';
-			colour = colourGreen;
-			embeds.push({ type: 'rich', color: colour, description: embed_content });
+			reg_embed_content = reg_embed_content + ':white_check_mark: Registered role has been assigned: **' + config.registered_role_name + '**.\n';
+			embeds[0] = { type: 'rich', title: reg_title, color: reg_colour, description: reg_embed_content };
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		} catch (err) {
 			// Error
 			keepGoing = false;
-			embed_content = ':no_entry: There was an error assigning the registered role.';
-			colour = colourRed;
-			embeds.push({ type: 'rich', color: colour, description: embed_content });
+			console.log('ERROR: Could not assign the registered role. (helpers/functions.js#updateRoles)');
+			reg_embed_content = reg_embed_content + ':no_entry: There was an error assigning the registered role.\n';
+			embeds[0] = { type: 'rich', title: reg_title, color: colourRed, description: reg_embed_content };
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		}
 	}
@@ -331,21 +391,20 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 							try {
 								member.roles.add(`${thisRow.role_id}`);
 								console.log('Role assigned: ' + thisRow.role_name + ' (' + thisRow.role_id + ')');
-								// If all_owner_roles is false (<>0) then don't changed roleAssigned
+								// If all_owner_roles is false (<>0) then don't change roleAssigned
 								if (config.all_owner_roles != 0) {
 									roleAssigned = true;
 								}
-								colour = colourGreen;
-								embed_content = ':white_check_mark: Owner role has been assigned: **' + thisRow.role_name + '**.';
-								embeds.push({ type: 'rich', color: colour, description: embed_content });
+								owner_embed_content = owner_embed_content + ':white_check_mark: Owner role has been assigned: **' + thisRow.role_name + '**.\n';
+								embeds[1] = { type: 'rich', title: owner_title, color: owner_colour, description: owner_embed_content };
 								await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 							} catch {
 								// Error
 								keepGoing = false;
 								roleAssigned = false;
-								embed_content = ':no_entry: There was an error assigning the owner role: **' + thisRow.role_name + '**.';
-								colour = colourRed;
-								embeds.push({ type: 'rich', color: colour, description: embed_content });
+								console.log('ERROR: Could not assign owner role (' + thisRow.role_name + '). (helpers/functions.js#updateRoles)');
+								owner_embed_content = owner_embed_content + ':no_entry: There was an error assigning the owner role: **' + thisRow.role_name + '**.\n';
+								embeds[1] = { type: 'rich', title: owner_title, color: colourRed, description: owner_embed_content };
 								await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 							}
 						} else {
@@ -354,7 +413,7 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 								member.roles.remove(`${thisRow.role_id}`);
 							} catch {
 								// Error removing previously assigned role
-								console.log('[ERROR]: removing previously assigned role.');
+								console.log('ERROR: Unable to remove previously assigned role.');
 							}
 						}
 						ownerRoles.push({ id: thisRow.role_id, name: thisRow.role_name, numnfts: thisRow.numnfts });
@@ -363,9 +422,9 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 			} catch {
 				// Error
 				keepGoing = false;
-				embed_content = ':no_entry: There was an error assigning the owner role.';
-				colour = colourRed;
-				embeds.push({ type: 'rich', color: colour, description: embed_content });
+				console.log('ERROR: Could not assign owners role. (helpers/functions.js#updateRoles)');
+				owner_embed_content = owner_embed_content + ':no_entry: There was an error assigning the owner role.\n';
+				embeds[1] = { type: 'rich', title: owner_title, color: colourRed, description: owner_embed_content };
 				await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 			}
 		} else {
@@ -379,15 +438,48 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 					member.roles.remove(thisRow.role_id);
 				}
 			});
-			keepGoing = false;
-			embed_content = ':construction_site: Not yet have enough NFTs to qualify for an owner role. This wallet has ' + numNFTs + ' NFTs and the lowest number to qualify is ' + lowestOwnerRole + '.';
-			colour = colourRed;
-			embeds.push({ type: 'rich', color: colour, description: embed_content });
+			// keepGoing = false;
+			owner_embed_content = owner_embed_content + ':construction_site: Not yet have enough NFTs to qualify for an owner role. This wallet has ' + numNFTs + ' NFTs and the lowest number to qualify is ' + lowestOwnerRole + '.\n';
 
 			if ((type != 'CHECK') && (config.secondary != '')) {
-				embed_content = ':construction_site: Check out the secondary market at ' + config.secondary + ' to get some more NFTs.';
-				colour = colourGreen;
-				embeds.push({ type: 'rich', color: colour, description: embed_content });
+				owner_embed_content = owner_embed_content + ':construction_site: Check out the secondary market at ' + config.secondary + ' to get some more NFTs.\n';
+			}
+			embeds[1] = { type: 'rich', title: owner_title, color: owner_colour, description: owner_embed_content };
+			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
+		}
+	}
+
+	// Add ASA Roles
+	if (keepGoing) {
+		for (let i = 0; i < Object.keys(asaRoles).length; i++) {
+			let roleAssigned = false;
+			// let hasASA = false;
+			const n_asa_id = Object.keys(asaRoles)[i];
+			const roles = asaRoles[`${n_asa_id}`];
+			for (let j = 0; j < roles.length; j++) {
+				const role_id = roles[j].role_id;
+				const role_name = roles[j].role_name;
+				const asa_qty = roles[j].asa_qty;
+				if (!roleAssigned) {
+					// const asa_name = roles[j].asa_name;
+					for (let k = 0; k < memberASAs.length; k++) {
+						if ((memberASAs[k].asa_id == `${n_asa_id}`) && (memberASAs[k].asa_qty >= asa_qty)) {
+							console.log('Role assigned: ' + role_name + '(' + role_id + ')');
+							member.roles.add(`${role_id}`);
+							asa_embed_content = asa_embed_content + ':white_check_mark: Owner role has been assigned: **' + role_name + '**.\n';
+							embeds[2] = { type: 'rich', title: asa_title, color: asa_colour, description: asa_embed_content };
+							if (config.all_owner_roles != 0) {
+								roleAssigned = true;
+							}
+						} else {
+							console.log('Role removed: ' + role_name + '(' + role_id + ')');
+							member.roles.remove(`${role_id}`);
+						}
+					}
+				} else {
+					console.log('Role removed: ' + role_name + '(' + role_id + ')');
+					member.roles.remove(`${role_id}`);
+				}
 			}
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		}
