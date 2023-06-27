@@ -48,7 +48,7 @@ export async function execute(interaction, config) {
 			{
 				title: all_owner_roles,
 				field: 'Give all owner roles for which the member qualifies',
-				command: '/config-registered-role',
+				command: '/config-all-owner-roles',
 			},
 			{
 				title: `${config.optin_token}\nMinutes: ${config.optin_tx_timeout}\nLink: https://algoxnft.com/asset/${config.optin_token}`,
