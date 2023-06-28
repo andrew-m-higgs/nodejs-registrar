@@ -465,7 +465,7 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 					for (let k = 0; k < memberASAs.length; k++) {
 						if ((memberASAs[k].asa_id == `${n_asa_id}`) && (memberASAs[k].asa_qty >= asa_qty)) {
 							console.log('Role assigned: ' + role_name + '(' + role_id + ')');
-							member.roles.add(`${role_id}`);
+							await member.roles.add(`${role_id}`);
 							asa_embed_content = asa_embed_content + ':white_check_mark: Owner role has been assigned: **' + role_name + '**.\n';
 							embeds[2] = { type: 'rich', title: asa_title, color: asa_colour, description: asa_embed_content };
 							if (config.all_owner_roles != 0) {
@@ -473,12 +473,12 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 							}
 						} else {
 							console.log('Role removed: ' + role_name + '(' + role_id + ')');
-							member.roles.remove(`${role_id}`);
+							await member.roles.remove(`${role_id}`);
 						}
 					}
 				} else {
 					console.log('Role removed: ' + role_name + '(' + role_id + ')');
-					member.roles.remove(`${role_id}`);
+					await member.roles.remove(`${role_id}`);
 				}
 			}
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
