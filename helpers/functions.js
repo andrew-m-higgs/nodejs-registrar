@@ -216,7 +216,7 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 	const colourRed = parseInt(Red);
 
 	const memberAssets = [];
-	const memberASAs = [];
+	const memberASAs = {};
 	let numNFTs = 0;
 	let reg_embed_content = '';
 	let owner_embed_content = '';
@@ -243,7 +243,7 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 	const asa_colour = 0xFF33FF;
 
 	let keepGoing = true;
-	const asaRoles = [];
+	const asaRoles = {};
 
 	// Get Creator Assets
 	const db = await db_functions.dbOpen();
@@ -264,7 +264,7 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 
 	// Get ASA roles
 	if (keepGoing) {
-		const sqlASA = 'SELECT * FROM asaroles ORDER BY asa_name ASC, role_name ASC, asa_qty DESC';
+		const sqlASA = 'SELECT * FROM asaroles ORDER BY asa_id ASC, asa_qty DESC';
 		await db.each(sqlASA, async (error, row) => {
 			if (error) {
 				console.log('ERROR: Collecting the ASA roles. (helpers/functions.js#updateRoles)');
@@ -277,10 +277,10 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 			const role_name = `${row.role_name}`;
 			const asa_qty = `${row.asa_qty}`;
 			if (!Object.keys(asaRoles).includes(asa_id)) {
-				asaRoles[asa_id] = [];
+				asaRoles[`${asa_id}`] = [];
 				console.log('Key added ' + asa_id);
 			}
-			asaRoles[asa_id].push({
+			asaRoles[`${asa_id}`].push({
 				asa_id: asa_id,
 				asa_name: asa_name,
 				role_id: role_id,
@@ -289,6 +289,7 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 			});
 		});
 	}
+	// console.log(asaRoles);
 
 	// Get Member Assets
 	if (keepGoing) {
@@ -316,16 +317,16 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 							numNFTs++;
 						}
 						if (Object.keys(asaRoles).includes(`${asa_id}`)) {
-							memberASAs.push(
-								{
-									asa_id: asa_id,
-									asa_qty: asset.amount,
-								},
-							);
+							if (!Object.keys(memberASAs).includes(asa_id)) {
+								memberASAs[`${asa_id}`] = [];
+							}
+							memberASAs[`${asa_id}`].push({
+								asa_id: asa_id,
+								asa_qty: asset.amount,
+							});
 						}
 					}
 				}
-				// console.log('memberASAs: ' + JSON.stringify(memberASAs));
 			}
 		} catch {
 			// Error
@@ -453,36 +454,77 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 	if (keepGoing) {
 		for (let i = 0; i < Object.keys(asaRoles).length; i++) {
 			let roleAssigned = false;
-			// let hasASA = false;
-			const n_asa_id = Object.keys(asaRoles)[i];
-			const roles = asaRoles[`${n_asa_id}`];
-			for (let j = 0; j < roles.length; j++) {
-				const role_id = roles[j].role_id;
-				const role_name = roles[j].role_name;
-				const asa_qty = roles[j].asa_qty;
-				if (!roleAssigned) {
-					// const asa_name = roles[j].asa_name;
-					for (let k = 0; k < memberASAs.length; k++) {
-						if ((memberASAs[k].asa_id == `${n_asa_id}`) && (memberASAs[k].asa_qty >= asa_qty)) {
-							console.log('Role assigned: ' + role_name + '(' + role_id + ')');
-							await member.roles.add(`${role_id}`);
-							asa_embed_content = asa_embed_content + ':white_check_mark: Owner role has been assigned: **' + role_name + '**.\n';
-							embeds[2] = { type: 'rich', title: asa_title, color: asa_colour, description: asa_embed_content };
-							if (config.all_owner_roles != 0) {
-								roleAssigned = true;
-							}
-						} else {
-							console.log('Role removed: ' + role_name + '(' + role_id + ')');
-							await member.roles.remove(`${role_id}`);
+			const role_asa_id = parseInt(Object.keys(asaRoles)[i]);
+			const roles = asaRoles[`${role_asa_id}`];
+			if (Object.keys(memberASAs).includes(`${role_asa_id}`)) {
+				// Go through roles and test qty
+				for (let j = 0; j < roles.length; j++) {
+					const role_id = roles[j].role_id;
+					const role_name = roles[j].role_name;
+					const role_asa_qty = parseFloat(roles[j].asa_qty);
+					const member_asa_qty = parseFloat(memberASAs[`${role_asa_id}`][0].asa_qty);
+					console.log('role: ' + role_asa_qty + ' ' + typeof role_asa_qty);
+					console.log('member: ' + member_asa_qty + ' ' + typeof member_asa_qty);
+					if ((!roleAssigned) && (member_asa_qty >= role_asa_qty)) {
+						console.log('Role assigned: ' + role_name + '(' + role_id + ')');
+						member.roles.add(role_id);
+						asa_embed_content = asa_embed_content + ':white_check_mark: Owner role has been assigned: **' + role_name + '**.\n';
+						embeds[2] = { type: 'rich', title: asa_title, color: asa_colour, description: asa_embed_content };
+						if (config.all_owner_roles != 0) {
+							roleAssigned = true;
 						}
+					} else {
+						console.log('Role removed: ' + role_name + '(' + role_id + ')');
+						member.roles.remove(role_id);
+						// asa_embed_content = asa_embed_content + ':no_entry: Quantity owned is not correct for this role **' + role_name + '**.\n';
+						// embeds[2] = { type: 'rich', title: asa_title, color: asa_colour, description: asa_embed_content };
 					}
-				} else {
+					await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
+				}
+			} else {
+				// Go through roles and delete
+				for (let j = 0; j < roles.length; j++) {
+					const role_id = roles[j].role_id;
+					const role_name = roles[j].role_name;
 					console.log('Role removed: ' + role_name + '(' + role_id + ')');
-					await member.roles.remove(`${role_id}`);
+					member.roles.remove(role_id);
+					// asa_embed_content = asa_embed_content + ':no_entry: Owner role **' + role_name + '** does not apply.\n';
+					// embeds[2] = { type: 'rich', title: asa_title, color: asa_colour, description: asa_embed_content };
+					// await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 				}
 			}
-			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		}
+
+		/*
+					// console.log('ROLES: ' + JSON.stringify(roles));
+							for (let k = 0; k < memberASAs.length; k++) {
+								if ((memberASAs[k].asa_id == n_asa_id) && (memberASAs[k].asa_qty >= asa_qty)) {
+									console.log('Role assigned: ' + role_name + '(' + role_id + ')');
+									member.roles.add(role_id);
+									asa_embed_content = asa_embed_content + ':white_check_mark: Owner role has been assigned: **' + role_name + '**.\n';
+									embeds[2] = { type: 'rich', title: asa_title, color: asa_colour, description: asa_embed_content };
+									if (config.all_owner_roles != 0) {
+										roleAssigned = true;
+									}
+								} else {
+									console.log('Role removed: ' + role_name + '(' + role_id + ')');
+									member.roles.remove(role_id);
+									asa_embed_content = asa_embed_content + ':no_entry: Owner role has been deleted: **' + role_name + '**.\n';
+									embeds[2] = { type: 'rich', title: asa_title, color: asa_colour, description: asa_embed_content };
+								}
+							}
+						} else {
+							console.log('Role removed2: ' + role_name + '(' + role_id + ')');
+							member.roles.remove(role_id);
+						}
+					}
+					await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
+				}
+
+
+		*/
+
+
 	}
 }
 
