@@ -3,23 +3,14 @@ import {
 	StringSelectMenuBuilder,
 } from 'discord.js';
 import algosdk from 'algosdk';
-import { CID } from 'multiformats/cid';
-import { decodeAddress as decode } from 'algosdk';
-import * as digest from 'multiformats/hashes/digest';
-import * as mfsha2 from 'multiformats/hashes/sha2';
 import * as db_functions from './db-functions.js';
 import 'dotenv/config';
+import { getAssetByID } from './algorand.js';
 const Green = process.env.Green;
 const Red = process.env.Red;
 
 export async function delay(time) {
 	return new Promise(resolve => setTimeout(resolve, time));
-}
-
-export async function addrToCid(template, addr) {
-	const [, , ver, codec, ,] = template.split(':');
-	const mhash = digest.create(mfsha2.sha256.code, decode(addr).publicKey);
-	return CID.create(ver * 1, codec == 'dag-pb' ? 0x70 : 0x55, mhash).toV1().toString();
 }
 
 export async function getMember(interaction, member_id) {
@@ -456,13 +447,15 @@ export async function updateRoles(interaction, config, nickname, wallet_string, 
 			let roleAssigned = false;
 			const role_asa_id = parseInt(Object.keys(asaRoles)[i]);
 			const roles = asaRoles[`${role_asa_id}`];
+			const asset = await getAssetByID(role_asa_id);
+			console.log('divisor: ' + asset.divisor);
 			if (Object.keys(memberASAs).includes(`${role_asa_id}`)) {
 				// Go through roles and test qty
 				for (let j = 0; j < roles.length; j++) {
 					const role_id = roles[j].role_id;
 					const role_name = roles[j].role_name;
 					const role_asa_qty = parseFloat(roles[j].asa_qty);
-					const member_asa_qty = parseFloat(memberASAs[`${role_asa_id}`][0].asa_qty);
+					const member_asa_qty = parseInt(memberASAs[`${role_asa_id}`][0].asa_qty) / asset.divisor;
 					console.log('role: ' + role_asa_qty + ' ' + typeof role_asa_qty);
 					console.log('member: ' + member_asa_qty + ' ' + typeof member_asa_qty);
 					if ((!roleAssigned) && (member_asa_qty >= role_asa_qty)) {

@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from 'discord.js';
 import algosdk from 'algosdk';
 import * as functions from '../helpers/functions.js';
 import * as db_functions from '../helpers/db-functions.js';
+import { addrToCid } from '../helpers/algorand.js';
 import 'dotenv/config';
 const NoPermission = process.env.NoPermission;
 const Green = process.env.Green;
@@ -50,7 +51,7 @@ export async function execute(interaction, config) {
 							walletASANum++;
 							if (assetUrl.toUpperCase().startsWith('TEMPLATE-IPFS://')) {
 								const address = asset.params.reserve;
-								ipfs = await functions.addrToCid(assetUrl, address);
+								ipfs = await addrToCid(assetUrl, address);
 							} else {
 								ipfs = assetUrl.split('/').pop().split('#').shift();
 							}
