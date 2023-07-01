@@ -13,8 +13,8 @@ export class Config {
 		this.admin_role_name = '';
 		this.registered_role_id = '';
 		this.registered_role_name = '';
-		this.all_owner_roles = 0;
-		this.optin_token = '';
+		this.all_owner_roles = 'F';
+		this.optin_asa_id = '';
 		this.optin_tx_timeout = 3;
 	}
 
@@ -22,6 +22,7 @@ export class Config {
 	// SET the server config
 	async set() {
 		const sql = `INSERT INTO config(server_id, collection_name, wallet_strings, secondary, admin_role_id, admin_role_name, registered_role_id, registered_role_name, all_owner_roles, optin_asa_id, optin_tx_timeout) VALUES("${this.server_id}", "${this.collection_name}", "${this.wallet_strings}", "${this.secondary}", "${this.admin_role_id}", "${this.admin_role_name}", "${this.registered_role_id}", "${this.registered_role_name}", "${this.all_owner_roles}", "${this.optin_asa_id}", ${this.optin_tx_timeout}) ON CONFLICT(server_id) DO UPDATE SET collection_name = "${this.collection_name}", admin_role_id = "${this.admin_role_id}", admin_role_name = "${this.admin_role_name}", registered_role_id = "${this.registered_role_id}", registered_role_name = "${this.registered_role_name}", wallet_strings = "${this.wallet_strings}", secondary = "${this.secondary}", all_owner_roles = "${this.all_owner_roles}", optin_asa_id = "${this.optin_asa_id}", optin_tx_timeout = ${this.optin_tx_timeout}`;
+		// logMessage(this.server_id, 'INFO', `classes/config.js#set() - SQL: ${sql}`);
 		let db = undefined;
 		try {
 			db = await dbOpen();

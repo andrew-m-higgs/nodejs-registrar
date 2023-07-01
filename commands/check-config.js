@@ -16,7 +16,7 @@ export async function execute(interaction, config) {
 		await interaction.reply({ content: 'Checking your configuration.', ephemeral: true });
 		const embeds = [];
 		let all_owner_roles = 'False';
-		if (config.all_owner_roles == 0) {
+		if (config.all_owner_roles == 'T') {
 			all_owner_roles = 'True';
 		}
 		const embed_details = [
@@ -75,7 +75,7 @@ export async function execute(interaction, config) {
 				},
 			});
 		}
-		console.log(JSON.stringify(embeds));
+		// console.log(JSON.stringify(embeds));
 		await interaction.editReply({ content: 'Checking your configuration.', embeds: embeds, ephemeral: true });
 	} else {
 		await interaction.reply(NoPermission);
