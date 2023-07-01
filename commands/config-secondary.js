@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import * as functions from '../helpers/functions.js';
-import * as db_functions from '../helpers/db-functions.js';
+import { logMessage } from '../helpers/admin.js';
 import 'dotenv/config';
 const NoPermission = process.env.NoPermission;
 const Green = process.env.Green;
@@ -27,18 +27,14 @@ export async function execute(interaction, config) {
 		const content = 'Updating the secondary link for this project.';
 
 		await interaction.reply({ content: content, embeds: embeds, ephemeral: true });
-		const sql = `UPDATE config SET secondary = "${secondary}";`;
 		try {
-			const db = await db_functions.dbOpen();
-			await db.run(sql);
+			config.secondary = secondary;
+			await config.set();
 			embeds.push({
 				type: 'rich',
 				color: colourGreen,
 				title: ':white_check_mark: Secondary link updated.',
 			});
-
-			// Update the config variable
-			config.secondary = secondary;
 
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		} catch {
@@ -47,7 +43,7 @@ export async function execute(interaction, config) {
 				color: colourRed,
 				title: ':no_entry: There was a problem updating the secondary link.',
 			});
-			console.log(sql);
+			logMessage(config.server_id, 'ERROR', 'There was a problem updating the secondary link.');
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		}
 
