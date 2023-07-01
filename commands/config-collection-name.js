@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import * as functions from '../helpers/functions.js';
-import * as db_functions from '../helpers/db-functions.js';
+import { logMessage } from '../helpers/admin.js';
 import 'dotenv/config';
 const NoPermission = process.env.NoPermission;
 const Green = process.env.Green;
@@ -27,19 +27,15 @@ export async function execute(interaction, config) {
 		const content = 'Updating Collection Name for this project.';
 
 		await interaction.reply({ content: content, embeds: embeds, ephemeral: true });
-		const sql = `UPDATE config SET collection_name = "${collection_name}";`;
+
 		try {
-			const db = await db_functions.dbOpen();
-			await db.run(sql);
+			config.collection_name = collection_name;
+			await config.set();
 			embeds.push({
 				type: 'rich',
 				color: colourGreen,
 				title: ':white_check_mark: Collection name updated.',
 			});
-
-			// Update the config variable
-			config.collection_name = collection_name;
-
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		} catch {
 			embeds.push({
@@ -48,6 +44,7 @@ export async function execute(interaction, config) {
 				title: ':no_entry: There was a problem updating the collection name.',
 			});
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
+			logMessage(config.server_id, 'ERROR', 'There was a problem updating the collection name.');
 		}
 
 	} else {
