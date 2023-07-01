@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import * as functions from '../helpers/functions.js';
-import * as db_functions from '../helpers/db-functions.js';
+import { logMessage } from '../helpers/admin.js';
 import 'dotenv/config';
 const NoPermission = process.env.NoPermission;
 const Green = process.env.Green;
@@ -30,19 +30,15 @@ export async function execute(interaction, config) {
 		const content = 'Updating the registered role for this project.';
 
 		await interaction.reply({ content: content, embeds: embeds, ephemeral: true });
-		const sql = `UPDATE config SET registered_role_id = "${registered_role.id}", registered_role_name = "${registered_role.name}";`;
 		try {
-			const db = await db_functions.dbOpen();
-			await db.run(sql);
+			config.registered_role_id = registered_role.id;
+			config.registered_role_name = registered_role.name;
+			await config.set();
 			embeds.push({
 				type: 'rich',
 				color: colourGreen,
 				title: ':white_check_mark: The registered role has been updated.',
 			});
-
-			// Update the config variable
-			config.registered_role_id = registered_role.id;
-			config.registered_role_name = registered_role.name;
 
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		} catch {
@@ -51,7 +47,7 @@ export async function execute(interaction, config) {
 				color: colourRed,
 				title: ':no_entry: There was a problem updating the registered role.',
 			});
-			console.log(sql);
+			logMessage(config.server_id, 'ERROR', 'There was a problem updating the registered role.');
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		}
 
