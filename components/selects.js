@@ -1,5 +1,8 @@
 import * as functions from '../helpers/functions.js';
 import * as db_functions from '../helpers/db-functions.js';
+import { deployCommands } from '../helpers/admin.js';
+import 'dotenv/config';
+const admin_guildId = process.env.admin_guildId;
 
 export async function doFlexSelect(interaction, config) {
 	const selected = interaction.values[0];
@@ -24,4 +27,14 @@ export async function doCheckSelect(interaction, config) {
 	const content = 'Checking member with wallet ' + wallet_string + '.';
 	await interaction.reply({ content: content, ephemeral: true });
 	functions.updateRoles(interaction, config, nickname, wallet_string, member_id, content, 'CHECK');
+}
+
+export async function doDeployCommands(interaction) {
+	if (interaction.guild.id == admin_guildId) {
+		// Deploy commands to a given server ID
+		const server_id = interaction.values[0];
+		const content = 'Deploying commands to ' + server_id + '.';
+		await interaction.reply({ content: content, ephemeral: true });
+		await deployCommands(['commands'], server_id, interaction);
+	}
 }
