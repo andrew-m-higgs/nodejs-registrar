@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js' ;
 import * as functions from '../helpers/functions.js';
-import * as db_functions from '../helpers/db-functions.js';
+import { logMessage } from '../helpers/admin.js';
 import 'dotenv/config';
 const NoPermission = process.env.NoPermission;
 const Green = process.env.Green;
@@ -34,19 +34,15 @@ export async function execute(interaction, config) {
 		const content = 'Updating the Optin Token ASA for this project.';
 
 		await interaction.reply({ content: content, embeds: embeds, ephemeral: true });
-		const sql = `UPDATE config SET optin_asa_id = "${optin_token}", optin_tx_timeout = ${tx_timeout};`;
 		try {
-			const db = await db_functions.dbOpen();
-			await db.run(sql);
+			config.optin_asa_id = optin_token;
+			config.optin_tx_timeout = tx_timeout;
+			await config.set();
 			embeds.push({
 				type: 'rich',
 				color: colourGreen,
 				title: ':white_check_mark: Optin token ASA updated.',
 			});
-
-			// Update the config variable
-			config.optin_token = optin_token;
-			config.optin_tx_timeout = tx_timeout;
 
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		} catch {
@@ -55,6 +51,7 @@ export async function execute(interaction, config) {
 				color: colourRed,
 				title: ':no_entry: There was a problem updating the optin token ASA.',
 			});
+			logMessage(config.server_id, 'ERROR', 'Option "all-owner-roles" is of type: 10; expected 3');
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		}
 
