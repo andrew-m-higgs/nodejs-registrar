@@ -27,18 +27,21 @@ export async function getCreatorWallets(wallet_strings) {
 	return wallet_strings.split(',');
 }
 
+export async function isOwner(interaction) {
+	// Check if the current member is the server owner
+	const owner = await interaction.guild.fetchOwner().catch(err => err);
+	if (owner.user.id === interaction.user.id) {
+		return true;
+	}
+	return false;
+}
 export async function isAdmin(interaction, config) {
-	// Check if the current member has the configured admin role.
+	// Check if the current member has the configured admin role
+	//   or is the server owner.
 	const member = await interaction.guild.members.fetch(interaction.user.id);
 
-	if (member.roles.cache.has(config.admin_role_id)) {
+	if ((member.roles.cache.has(config.admin_role_id)) || (await isOwner(interaction))) {
 		return true;
-	} else {
-		// If interaction user is the Owner Admin is assumed
-		const owner = await interaction.guild.fetchOwner().catch(err => err);
-		if (owner.user.id === interaction.user.id) {
-			return true;
-		}
 	}
 	return false;
 }

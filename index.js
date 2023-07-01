@@ -1,13 +1,12 @@
 import fs from 'fs';
 import path from 'node:path';
 import { Client, Events, Collection, GatewayIntentBits } from 'discord.js';
-import { doFlexSelect, doCheckSelect } from './components/selects.js';
+import { doFlexSelect, doCheckSelect, doDeployCommands } from './components/selects.js';
 import * as db_functions from './helpers/db-functions.js';
-import * as functions from './helpers/functions.js';
+import { Config } from './classes/config.js';
 import 'dotenv/config';
 const token = process.env.token;
-
-let config = {};
+const admin_guildId = process.env.admin_guildId;
 
 // Create a new client instance
 const client = new Client({
@@ -19,9 +18,9 @@ const client = new Client({
 
 client.commands = new Collection();
 
-const commandsPath = path.join(process.cwd(), 'commands');
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-async function addCommands() {
+async function addCommands(dir) {
+	const commandsPath = path.join(process.cwd(), dir);
+	const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 	for (const file of commandFiles) {
 		const filePath = path.join(commandsPath, file);
 		const command = await import(`${filePath}`);
@@ -33,7 +32,9 @@ async function addCommands() {
 		}
 	}
 }
-addCommands();
+addCommands('commands');
+
+addCommands('commands');
 
 // When the client is ready, run this code (only once)
 // We use 'c' for the event parameter to keep it separate from the already defined 'client'
@@ -41,23 +42,8 @@ client.once(Events.ClientReady, async (c) => {
 	console.log(`Ready! Logged in as ${c.user.tag}`);
 	const dbReady = await db_functions.dbCheck();
 	if (dbReady) {
-		const db = await db_functions.dbOpen();
+		// const db = await db_functions.dbOpen();
 		console.log('Database is ready.');
-		const row = await db.get('SELECT * FROM config');
-		// [TODO]: Make config a class...
-		config = {
-			collection_name: row['collection_name'],
-			wallet_strings: await functions.getCreatorWallets(row['wallet_strings']),
-			secondary: row['secondary'],
-			admin_role_id: row['admin_role_id'],
-			admin_role_name: row['admin_role_name'],
-			registered_role_id: row['registered_role_id'],
-			registered_role_name: row['registered_role_name'],
-			all_owner_roles: row['all_owner_roles'],
-			optin_token: row['optin_asa_id'],
-			optin_tx_timeout: row['optin_tx_timeout'],
-		};
-		console.log('Config is set.');
 	} else {
 		console.error('[ERROR]: There was a problem opening the database.');
 		return false;
@@ -66,6 +52,28 @@ client.once(Events.ClientReady, async (c) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
+	if (interaction.guild.id == admin_guildId) {
+		addCommands('admin-commands');
+	}
+	const server_id = interaction.guild.id;
+	console.log('Server ID: ' + server_id);
+	const config = new Config(server_id);
+	await config.get();
+	// const db = await db_functions.dbOpen();
+	// const row = await db.get('SELECT * FROM config WHERE server_id = ' + server_id);
+	// [TODO]: Make config a class...
+	/* config = {
+		collection_name: row['collection_name'],
+		wallet_strings: await functions.getCreatorWallets(row['wallet_strings']),
+		secondary: row['secondary'],
+		admin_role_id: row['admin_role_id'],
+		admin_role_name: row['admin_role_name'],
+		registered_role_id: row['registered_role_id'],
+		registered_role_name: row['registered_role_name'],
+		all_owner_roles: row['all_owner_roles'],
+		optin_token: row['optin_asa_id'],
+		optin_tx_timeout: row['optin_tx_timeout'],
+	};*/
 	if (interaction.isChatInputCommand()) {
 		const command = interaction.client.commands.get(interaction.commandName);
 
@@ -90,6 +98,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
 			break;
 		case 'check_select':
 			doCheckSelect(interaction, config);
+			break;
+		case 'deploy_select':
+			doDeployCommands(interaction, config);
 			break;
 		}
 	} else if (interaction.isButton) {
