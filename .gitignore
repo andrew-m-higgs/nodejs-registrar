@@ -1,11 +1,6 @@
 # Own
-registrar.db
+*.db
 junk
-config.json
-log.txt
-nohup.out
-registrar.bkp.db
-startup.sh
 
 # Logs
 logs
