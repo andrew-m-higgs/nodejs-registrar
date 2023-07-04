@@ -17,6 +17,7 @@ export async function getAssetByID(asa_id) {
 	const asset = _asset.asset;
 	const divisor = Math.pow(10, asset.params.decimals);
 	return {
+		asa_id: `${asa_id}`,
 		creator: `${asset.params.creator}`,
 		decimals: asset.params.decimals,
 		name: `${asset.params.name}`,

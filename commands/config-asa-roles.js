@@ -1,7 +1,8 @@
 import { SlashCommandBuilder } from 'discord.js';
-import algosdk from 'algosdk';
 import * as functions from '../helpers/functions.js';
 import * as db_functions from '../helpers/db-functions.js';
+import { getAssetByID } from '../helpers/algorand.js';
+import { ASA } from '../classes/asa.js';
 import 'dotenv/config';
 const NoPermission = process.env.NoPermission;
 const Green = process.env.Green;
@@ -16,16 +17,16 @@ export const data = new SlashCommandBuilder()
 			.setDescription('The role which will be given.')
 			.setRequired(true),
 	)
-	.addNumberOption(option =>
+	.addStringOption(option =>
 		option
-			.setName('asa-id')
-			.setDescription('The ASA ID for which this role is given.')
+			.setName('asa-ids')
+			.setDescription('The ASA IDs which make up the role to be given. Single or comma delimited.')
 			.setRequired(true),
 	)
 	.addNumberOption(option =>
 		option
-			.setName('asa-qty')
-			.setDescription('The ASA ID quantity needed for this role to be given.')
+			.setName('role-qty')
+			.setDescription('The quantity needed, from the sum of the ASA IDs, for this role to be given.')
 			.setRequired(true),
 	)
 	.addStringOption(option =>
@@ -47,45 +48,61 @@ export async function execute(interaction, config) {
 
 	if (isAdmin) {
 		const asa_role = await interaction.options.getRole('asa-role');
-		const asa_id = await interaction.options.getNumber('asa-id');
-		// Get ASA Name
-		const indexerClient = new algosdk.Indexer('', 'https://mainnet-idx.algonode.cloud', '');
-		const assetInfo = await indexerClient.lookupAssetByID(asa_id).do();
-		const asa_name = assetInfo.asset.params.name;
+		let asa_ids = await interaction.options.getString('asa-ids').replaceAll(' ', '');
+		const role_qty = await interaction.options.getNumber('role-qty');
+		let delete_role = await interaction.options.getString('delete-role');
 
-		const asa_qty = await interaction.options.getNumber('asa-qty');
 		const embeds = [];
 		const content = 'Updating the ASA roles for this project.';
-		let delete_role = await interaction.options.getString('delete-role');
+
 		if (delete_role == null || delete_role == 'false') {
 			delete_role = false;
 		} else {
 			delete_role = true;
 		}
 
-		await interaction.reply({ content: content, embeds: embeds, ephemeral: true });
-		let sql = `INSERT INTO asaroles(role_id, role_name, asa_id, asa_name, asa_qty) VALUES("${asa_role.id}", "${asa_role.name}", ${asa_id}, "${asa_name}", ${asa_qty}) ON CONFLICT(role_id, asa_id) DO UPDATE SET role_name = "${asa_role.name}", asa_qty = ${asa_qty}, asa_name = "${asa_name}";`;
-		if (delete_role) {
-			sql = `DELETE FROM asaroles WHERE asa_id = ${asa_id} AND role_id = "${asa_role.id}";`;
+		// Massage asa_ids so that they are always comparable
+		console.log('1: ' + asa_ids);
+		const asa_ids_arr = asa_ids.split(',').sort();
+		asa_ids = asa_ids_arr.join(',');
+		console.log('2: ' + asa_ids);
+
+		// Get ASA Name
+		for (const asa_id of asa_ids_arr) {
+			const asa = new ASA(asa_id);
+			const assetInfo = await getAssetByID(asa_id);
+			// console.log(JSON.stringify(assetInfo));
+			asa.asa_name = assetInfo.name;
+			asa.asa_decimals = assetInfo.decimals;
+			asa.asa_divisor = assetInfo.divisor;
+			await asa.set();
 		}
-		console.log(sql);
+
+		await interaction.reply({ content: content, embeds: embeds, ephemeral: true });
+		let sql = `INSERT INTO asaroles(role_id, role_name, asa_ids, role_qty) VALUES("${asa_role.id}", "${asa_role.name}", "${asa_ids}", ${role_qty}) ON CONFLICT(role_id, asa_ids) DO UPDATE SET role_name = "${asa_role.name}", role_qty = ${role_qty};`;
+		if (delete_role) {
+			sql = `DELETE FROM asaroles WHERE asa_ids = ${asa_ids} AND role_id = "${asa_role.id}";`;
+		}
+		// console.log(sql);
 		try {
 			const db = await db_functions.dbOpen();
 			await db.run(sql);
 			embeds.push({
 				type: 'rich',
 				color: colourGreen,
-				title: ':white_check_mark: The ASA roles have been updated. Run /view-asa-roles to check them.',
+				title: ':white_check_mark: The ASA role has been updated. Run /view-asa-roles to check.',
 			});
 
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
-		} catch (err) {
+		} catch (error) {
 			embeds.push({
 				type: 'rich',
 				color: colourRed,
 				title: ':no_entry: There was a problem updating the ASA roles.',
-				description: `**Error**: ${err.message}`,
 			});
+			console.log('ERROR: There was an error updating ASA roles. commands/config-asa-roles.js');
+			console.log('ERROR: SQL: ' + sql);
+			console.log('ERROR: ' + error.message);
 			await interaction.editReply({ content: content, embeds: embeds, ephemeral: true });
 		}
 
