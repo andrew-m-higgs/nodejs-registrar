@@ -70,6 +70,7 @@ export async function getConfigRole(type) {
 	};
 }
 
+// getNFT()
 export async function getNFT(asset_id) {
 	const db = await db_functions.dbOpen();
 	return await db.get('SELECT * FROM assets WHERE asset_id = ' + asset_id + ' LIMIT 1');
