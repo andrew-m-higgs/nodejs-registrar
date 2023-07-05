@@ -20,6 +20,10 @@ export async function execute(interaction, config) {
 			value: 'View a list of owner roles you can achieve in ' + config.collection_name + '.',
 		},
 		{
+			name: '/view-asa-roles',
+			value: 'View a list of roles you can achieve based on ASA ID ownership.',
+		},
+		{
 			name: '/flex',
 			value: 'Flex your favourite NFT from ' + config.collection_name + '.',
 		},
@@ -30,6 +34,10 @@ export async function execute(interaction, config) {
 		{
 			name: '/info',
 			value: 'Show some information about the server and project.',
+		},
+		{
+			name: '/ping',
+			value: 'Simple way to confirm Bot is running.',
 		},
 	];
 	const embed = [{

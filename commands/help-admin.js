@@ -48,6 +48,10 @@ export async function execute(interaction, config) {
 				value: 'The roles given to members when they /register a wallet containing NFTs from this project.',
 			},
 			{
+				name: '/config-asa-roles',
+				value: 'The roles given to members who own certain ASA IDs and meet the quantities requirements.',
+			},
+			{
 				name: '/check',
 				value: 'Used to check anyone who has a registered wallet. This will run through and check owned assets and update roles if necessary.',
 			},
@@ -60,7 +64,7 @@ export async function execute(interaction, config) {
 				value: 'Used to search the database for a specific wallet address.',
 			},
 			{
-				name: '/info',
+				name: '/config-info',
 				value: 'Add key value pairs to display when someone runs the /info command.',
 			},
 		];
