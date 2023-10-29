@@ -45,7 +45,7 @@ export async function execute(interaction, config) {
 				break;
 			}
 			// Fix thie width of nickname
-			if (row.nickname.length > 19) {
+			if (row.nickname.length > 16) {
 				namestr = row.nickname.slice(0, 13) + '...';
 			} else if (row.nickname.length == 15) {
 				namestr = row.nickname;
