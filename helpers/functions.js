@@ -86,7 +86,7 @@ export async function flexAsset(interaction, config, asset, flexType) {
 	const assetIPFS = asset['ipfs'];
 	const assetID = asset['asset_id'];
 	const assetQty = asset['qty'];
-	const ipfsSites = ['https://ipfs.algonft.tools/ipfs/', 'https://ipfs.io/ipfs/'];
+	const ipfsSites = ['https://ipfs.io/ipfs/'];
 	// const randIdx = Math.round(Math.random());
 	// Test algonft.tools by itself. ipfs.io seemed to timeout a few times
 	const linkIPFS = `${ipfsSites[0]}${assetIPFS}`;
