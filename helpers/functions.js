@@ -116,8 +116,8 @@ export async function flexAsset(interaction, config, asset, flexType) {
 				components: [
 					{
 						style: 5,
-						label: 'NFT Explorer ',
-						url: `https://www.nftexplorer.app/asset/${assetID}`,
+						label: 'Minthol.art',
+						url: `https://www.minthol.art/algo/assets/${assetID}`,
 						disabled: false,
 						type: 2,
 					},
