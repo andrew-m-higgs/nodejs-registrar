@@ -6,6 +6,7 @@ import * as db_functions from './helpers/db-functions.js';
 import * as functions from './helpers/functions.js';
 import 'dotenv/config';
 const token = process.env.token;
+const bot_name = process.env.botName;
 
 let config = {};
 
@@ -94,6 +95,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
 		}
 	} else if (interaction.isButton) {
 		// No Buttons used at the moment.
+	}
+});
+
+client.on('ready', function() {
+	if (bot_name) {
+		client.user.setUsername(`${bot_name}`);
+	// } else {
+	//	client.user.setUsername('Bot-Bot');
 	}
 });
 

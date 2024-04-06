@@ -116,6 +116,13 @@ export async function flexAsset(interaction, config, asset, flexType) {
 				components: [
 					{
 						style: 5,
+						label: 'Flipping Algos',
+						url: `https://explorer.flippingalgos.xyz/asset/${assetID}`,
+						disabled: false,
+						type: 2,
+					},
+					{
+						style: 5,
 						label: 'Minthol.art',
 						url: `https://www.minthol.art/algo/assets/${assetID}`,
 						disabled: false,
